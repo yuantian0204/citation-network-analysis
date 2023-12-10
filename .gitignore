@@ -16,5 +16,8 @@ Cargo.lock
 # IDE generated
 .idea
 
+# OS generated
+.DS_Store
+
 # Added by cargo
 /target
