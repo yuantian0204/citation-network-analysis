@@ -1,7 +1,6 @@
 use crate::centrality::centrality::{Centrality, CentralityRank};
 use crate::network::CitationNetwork;
 use std::cmp::Ordering;
-use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 
 /// The in-degree centrality score of a single paper
@@ -57,7 +56,7 @@ pub(crate) fn calculate_degree_centrality(
     network: &CitationNetwork,
 ) -> CentralityRank<i32, DegreeCentrality> {
     let mut ranks: Vec<_> = network
-        .iter()
+        .in_edges()
         .map(|(&vertex, edges)| DegreeCentrality::new(vertex, edges.len() as i32))
         .collect();
     ranks.sort_by(|a, b| b.partial_cmp(a).unwrap());

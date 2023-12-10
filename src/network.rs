@@ -5,8 +5,10 @@ use std::io::{BufRead, BufReader};
 
 /// A network of citations
 pub(crate) struct CitationNetwork {
-    /// The graph is stored as adjacency lists for each node
+    /// The in-edges of each node
     in_edges: HashMap<usize, Vec<usize>>,
+    /// The out-edges of each node
+    out_edges: HashMap<usize, Vec<usize>>,
 }
 
 impl CitationNetwork {
@@ -14,6 +16,7 @@ impl CitationNetwork {
     pub(crate) fn new() -> CitationNetwork {
         CitationNetwork {
             in_edges: HashMap::new(),
+            out_edges: HashMap::new(),
         }
     }
     /// Adds an edge to the network
@@ -28,26 +31,32 @@ impl CitationNetwork {
     pub(crate) fn add_edge(&mut self, from: usize, to: usize) {
         self.in_edges.entry(to).or_insert_with(Vec::new).push(from);
         self.in_edges.entry(from).or_insert_with(Vec::new);
+        self.out_edges.entry(from).or_insert_with(Vec::new).push(to);
+        self.out_edges.entry(to).or_insert_with(Vec::new);
     }
     /// Returns the number of nodes in the network
     pub(crate) fn size(&self) -> usize {
-        return self.in_edges.len();
+        return self.out_edges.len();
     }
     /// Returns the number of edges in the network
     pub(crate) fn num_edges(&self) -> usize {
-        return self.in_edges.values().map(|x| x.len()).sum();
+        return self.out_edges.values().map(|x| x.len()).sum();
     }
     /// Returns the nodes in the network
     pub(crate) fn nodes(&self) -> impl Iterator<Item = &usize> {
-        self.in_edges.keys()
+        self.out_edges.keys()
     }
-    /// Returns an iterator over the edges in the network
-    pub(crate) fn iter(&self) -> impl Iterator<Item = (&usize, &Vec<usize>)> {
+    /// Returns an iterator over the in-edges in the network
+    pub(crate) fn in_edges(&self) -> impl Iterator<Item = (&usize, &Vec<usize>)> {
         self.in_edges.iter()
     }
-    /// Returns the in-edges to a given vertex in the network
-    pub(crate) fn edges(&self, vertex: usize) -> impl Iterator<Item = &usize> {
-        self.in_edges[&vertex].iter()
+    /// Returns an iterator over the in-edges to a node in the network
+    pub(crate) fn in_edges_to(&self, vertex: usize) -> impl Iterator<Item = &usize> {
+        self.in_edges.get(&vertex).unwrap().iter()
+    }
+    /// Returns an iterator over the out-edges in the network
+    pub(crate) fn out_edges_from(&self, vertex: usize) -> impl Iterator<Item = &usize> {
+        self.out_edges.get(&vertex).unwrap().iter()
     }
     /// Loads a network from a file
     ///
@@ -98,6 +107,12 @@ mod tests {
         assert_eq!(graph.in_edges[&2], vec![0, 1]);
         assert!(graph.in_edges.contains_key(&3));
         assert_eq!(graph.in_edges[&3], vec![0, 1, 2]);
+        assert!(graph.out_edges.contains_key(&0));
+        assert_eq!(graph.out_edges[&0], vec![1, 2, 3]);
+        assert!(graph.out_edges.contains_key(&1));
+        assert_eq!(graph.out_edges[&1], vec![2, 3]);
+        assert!(graph.out_edges.contains_key(&2));
+        assert_eq!(graph.out_edges[&2], vec![3]);
         assert_eq!(graph.num_edges(), 6);
     }
 
